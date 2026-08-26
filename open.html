@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>851 GPS Faker - 開啟分享</title>
+<style>
+  body { background:#111; color:#fff; font-family:sans-serif; text-align:center; padding:40px 20px; }
+  h1 { color:#42A5F5; font-size:24px; }
+  p { color:#aaa; font-size:14px; line-height:1.6; }
+  .btn { display:inline-block; margin:16px auto; padding:14px 32px;
+         background:#1565C0; color:#fff; border-radius:30px;
+         text-decoration:none; font-size:16px; font-weight:bold; }
+</style>
+<script>
+window.onload = function() {
+  var params = window.location.search;
+  var appUrl = 'gps851://open' + params;
+  window.location.href = appUrl;
+  setTimeout(function() {
+    document.getElementById('btnOpen').style.display = 'inline-block';
+    document.getElementById('hint').style.display = 'block';
+  }, 1500);
+};
+</script>
+</head>
+<body>
+<h1>851 GPS Faker</h1>
+<p>收到朋友分享的位置或路線！</p>
+<p>正在開啟 App...</p>
+<a id="btnOpen" href="javascript:void(0)"
+   onclick="window.location.href='gps851://open'+window.location.search"
+   class="btn" style="display:none">點此開啟 App</a>
+<p id="hint" style="display:none; color:#666; font-size:12px;">
+  如果 App 未開啟，請先安裝 851 GPS Faker
+</p>
+</body>
+</html>

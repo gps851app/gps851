@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>851 GPS Faker</title>
+<style>
+  body { background:#111; color:#fff; font-family:sans-serif; text-align:center; padding:40px 20px; }
+  h1 { color:#42A5F5; font-size:24px; }
+  p { color:#aaa; font-size:15px; line-height:1.6; }
+  .btn { display:inline-block; margin:16px auto; padding:14px 32px;
+         background:#1565C0; color:#fff; border-radius:30px;
+         text-decoration:none; font-size:16px; font-weight:bold; }
+  .hint { font-size:12px; color:#666; margin-top:20px; }
+</style>
+<script>
+// 自動讀取 URL 參數，轉換成 gps851:// deep link
+window.onload = function() {
+  var params = window.location.search;
+  var appUrl = 'gps851://open' + params;
+  // 自動跳轉（如果裝了 APP）
+  window.location.href = appUrl;
+  // 2秒後還沒跳走，顯示按鈕
+  setTimeout(function() {
+    document.getElementById('btnOpen').style.display = 'inline-block';
+    document.getElementById('noApp').style.display = 'block';
+  }, 2000);
+};
+</script>
+</head>
+<body>
+<h1>851 GPS Faker</h1>
+<p>正在開啟 App...</p>
+<a id="btnOpen" href="javascript:void(0)"
+   onclick="window.location.href='gps851://open'+window.location.search"
+   class="btn" style="display:none">點此開啟 851 GPS Faker</a>
+<p id="noApp" style="display:none" class="hint">
+  如果無法開啟，請先安裝 851 GPS Faker App
+</p>
+</body>
+</html>
