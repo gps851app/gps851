@@ -8,31 +8,39 @@
   body { background:#111; color:#fff; font-family:sans-serif; text-align:center; padding:40px 20px; }
   h1 { color:#42A5F5; font-size:24px; }
   p { color:#aaa; font-size:14px; line-height:1.6; }
-  .btn { display:inline-block; margin:16px auto; padding:14px 32px;
-         background:#1565C0; color:#fff; border-radius:30px;
+  .btn { display:block; max-width:300px; margin:16px auto; padding:14px 20px; color:#fff; border-radius:30px;
          text-decoration:none; font-size:16px; font-weight:bold; }
+  .open { background:#1565C0; }
+  .play { background:#2E7D32; }
 </style>
 <script>
-window.onload = function() {
-  var params = window.location.search;
-  var appUrl = 'gps851://open' + params;
-  window.location.href = appUrl;
-  setTimeout(function() {
-    document.getElementById('btnOpen').style.display = 'inline-block';
-    document.getElementById('hint').style.display = 'block';
-  }, 1500);
+// 2026/11（v56）：有裝 APP → 開 APP；沒裝 → 帶去 Google Play，網址附上分享內容（referrer），
+// 裝好第一次打開 APP 會自動問。整組座標（type=group）資料太長，改走 import.html（會先複製到剪貼簿）
+window.onload = function () {
+  var PKG = 'com.gps851.faker';
+  var q = location.search.replace(/^\?/, '').split('&').filter(function (p) {
+    return p && p.indexOf('openExternalBrowser=') !== 0;
+  }).join('&');
+  var type = (q.match(/(?:^|&)type=([^&]*)/) || [])[1];
+  if (type === 'group') {
+    var d = (q.match(/(?:^|&)data=([^&]*)/) || [])[1];
+    if (d) { location.replace('import.html#d=' + d); return; }
+  }
+  var playUrl = 'https://play.google.com/store/apps/details?id=' + PKG +
+      (q.length < 1500 ? '&referrer=' + encodeURIComponent('dl=' + encodeURIComponent(q)) : '');
+  var intentUrl = 'intent://open?' + q + '#Intent;scheme=gps851;package=' + PKG +
+      ';S.browser_fallback_url=' + encodeURIComponent(playUrl) + ';end';
+  document.getElementById('btnOpen').href = /Android/i.test(navigator.userAgent) ? intentUrl : 'gps851://open?' + q;
+  document.getElementById('btnPlay').href = playUrl;
+  setTimeout(function () { location.href = document.getElementById('btnOpen').href; }, 300);
 };
 </script>
 </head>
 <body>
 <h1>851 GPS Faker</h1>
-<p>收到朋友分享的位置或路線！</p>
-<p>正在開啟 App...</p>
-<a id="btnOpen" href="javascript:void(0)"
-   onclick="window.location.href='gps851://open'+window.location.search"
-   class="btn" style="display:none">點此開啟 App</a>
-<p id="hint" style="display:none; color:#666; font-size:12px;">
-  如果 App 未開啟，請先安裝 851 GPS Faker
-</p>
+<p>收到朋友分享的位置或路線！正在開啟 App⋯⋯</p>
+<a id="btnOpen" class="btn open" href="#">點此開啟 App</a>
+<a id="btnPlay" class="btn play" href="#">還沒安裝？到 Google Play 安裝</a>
+<p style="color:#666;font-size:12px;">安裝完成後按「開啟」，App 會自動帶入朋友分享的內容。</p>
 </body>
 </html>

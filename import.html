@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>851 GPS Faker - 匯入座標組</title>
+<style>
+  body { background:#0E1525; color:#fff; font-family:sans-serif; text-align:center; padding:32px 20px; margin:0; }
+  h1 { color:#60A5FA; font-size:20px; margin:0; }
+  h2 { font-size:26px; margin:18px 0 4px; word-break:break-all; }
+  .sum { color:#FFD54F; font-size:15px; }
+  .cats { color:#9AA3B5; font-size:13px; margin:10px auto 0; max-width:340px; line-height:1.6; }
+  .btn { display:block; max-width:320px; margin:16px auto; padding:15px 20px; border-radius:30px; border:0;
+         font-size:17px; font-weight:bold; color:#fff; text-decoration:none; cursor:pointer; width:100%; box-sizing:border-box; }
+  .open { background:#1565C0; }
+  .play { background:#2E7D32; }
+  .box { max-width:340px; margin:22px auto 0; text-align:left; color:#C9D1E0; font-size:14px; line-height:1.8; }
+  .box b { color:#fff; }
+  .warn { color:#FCA5A5; }
+  .note { color:#7C8599; font-size:12px; margin-top:26px; line-height:1.6; }
+  .hide { display:none; }
+</style>
+</head>
+<body>
+<h1>851 GPS Faker</h1>
+<h2 id="name">座標組</h2>
+<div class="sum" id="sum"></div>
+<div class="cats" id="cats"></div>
+
+<div id="bad" class="hide box warn">這個座標組的資料不完整，請向分享的人重新索取座標組檔。</div>
+
+<div id="main" class="hide">
+  <div id="noapp" class="hide box warn">這支手機好像還沒安裝 851 GPS Faker，請按下面綠色按鈕安裝。</div>
+  <a id="btnOpen" class="btn open" href="#">開啟 APP 匯入</a>
+  <button id="btnPlay" class="btn play" type="button">還沒安裝？到 Google Play 安裝</button>
+  <div class="box">
+    <b>已經安裝：</b>按藍色按鈕，APP 會問你要存到萬花筒「我的地圖收藏」的哪一格。<br>
+    <b>還沒安裝：</b>按綠色按鈕到 Google Play 安裝，裝好後按「開啟」，APP 會自動問你要不要匯入。<br>
+    如果沒有跳出匯入詢問，請回到這裡再按一次藍色按鈕。
+  </div>
+</div>
+<div id="other" class="hide box warn">851 GPS Faker 目前只支援 Android 手機，請用 Android 手機開啟。</div>
+<div class="note">在 LINE 裡打不開的話，請點右上角「⋮」→「用預設瀏覽器開啟」。</div>
+
+<script>
+(function () {
+  var PKG = 'com.gps851.faker';
+  var CLIP_PREFIX = 'GPS851GROUP:';
+  var $ = function (id) { return document.getElementById(id); };
+  var hash = location.hash.replace(/^#/, '');
+  var m = hash.match(/(?:^|&)d=([A-Za-z0-9_\-=%]+)/);
+  if (!m) { $('bad').classList.remove('hide'); return; }
+  var data = decodeURIComponent(m[1]);
+  var noApp = /(?:\?|&)noapp=1/.test(location.search);
+  var isAndroid = /Android/i.test(navigator.userAgent);
+
+  // 顯示組名、分類、地點數（解壓縮失敗也不影響匯入）
+  try {
+    var b64 = data.replace(/-/g, '+').replace(/_/g, '/');
+    var bin = atob(b64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    if (window.DecompressionStream) {
+      new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text().then(function (t) {
+        var g = JSON.parse(t), pts = 0, names = [];
+        (g.c || []).forEach(function (c) { pts += (c[1] || []).length; names.push(c[0]); });
+        $('name').textContent = g.n || '座標組';
+        $('sum').textContent = (g.c || []).length + ' 個分類・' + pts + ' 個地點';
+        $('cats').textContent = names.slice(0, 20).join('、') + (names.length > 20 ? '⋯' : '');
+        document.title = (g.n || '座標組') + '｜851 GPS Faker';
+      }).catch(function () {});
+    }
+  } catch (e) {}
+
+  if (!isAndroid) { $('other').classList.remove('hide'); return; }
+  $('main').classList.remove('hide');
+  if (noApp) $('noapp').classList.remove('hide');
+
+  var self = location.href.split('#')[0].split('?')[0];
+  var fallback = self + '?noapp=1#d=' + encodeURIComponent(data);
+  var intentUrl = 'intent://open?type=group&data=' + encodeURIComponent(data) +
+      '#Intent;scheme=gps851;package=' + PKG + ';S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end';
+  var playUrl = 'https://play.google.com/store/apps/details?id=' + PKG +
+      '&referrer=' + encodeURIComponent('dl=' + encodeURIComponent('type=clip'));
+  $('btnOpen').href = intentUrl;
+
+  // 去 Google Play 之前先把整組資料放進剪貼簿，裝好打開 APP 時讀回來
+  function copy(text) {
+    var ok = false;
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.top = '-1000px';
+      document.body.appendChild(ta); ta.select(); ok = document.execCommand('copy'); document.body.removeChild(ta);
+    } catch (e) {}
+    if (!ok && navigator.clipboard) { try { navigator.clipboard.writeText(text); } catch (e) {} }
+  }
+  $('btnPlay').onclick = function () { copy(CLIP_PREFIX + data); location.href = playUrl; };
+
+  // 一打開先自動試著開 APP（有些瀏覽器會擋，擋住就讓使用者自己按藍色按鈕）
+  if (!noApp) setTimeout(function () { location.href = intentUrl; }, 400);
+})();
+</script>
+</body>
+</html>
