@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>851 GPS Faker - 開啟分享</title>
+<meta property="og:title" content="851 GPS Faker - 朋友分享的位置／路線">
+<meta property="og:description" content="點開用 851 GPS Faker 開啟">
+<meta name="description" content="點開用 851 GPS Faker 開啟">
 <style>
   body { background:#111; color:#fff; font-family:sans-serif; text-align:center; padding:40px 20px; }
   h1 { color:#42A5F5; font-size:24px; }
@@ -26,6 +29,21 @@ window.onload = function () {
     var d = (q.match(/(?:^|&)data=([^&]*)/) || [])[1];
     if (d) { location.replace('import.html#d=' + d); return; }
   }
+  // 2026/11/11（v68）：點很多的路線，資料存在 Firebase，連結只帶代號 s=，先讀回來換成 data=（舊版 APP 也能開）
+  var sid = (q.match(/(?:^|&)s=([A-Za-z0-9]{6,40})(?:&|$)/) || [])[1];
+  if (type === 'route' && sid && !window.__sDone) {
+    fetch('https://firestore.googleapis.com/v1/projects/gps851-feast/databases/(default)/documents/shares/' + sid +
+          '?key=AIzaSyBZmPN9rjQbFmJW8bz2S5KdVMMuqikn-jg')
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) {
+        q = q.replace('s=' + sid, 'data=' + encodeURIComponent(j.fields.d.stringValue));
+        go();
+      })
+      .catch(function () { go(); });
+    return;
+  }
+  go();
+  function go() {
   var playUrl = 'https://play.google.com/store/apps/details?id=' + PKG +
       (q.length < 1500 ? '&referrer=' + encodeURIComponent('dl=' + encodeURIComponent(q)) : '');
   var intentUrl = 'intent://open?' + q + '#Intent;scheme=gps851;package=' + PKG +
@@ -33,6 +51,7 @@ window.onload = function () {
   document.getElementById('btnOpen').href = /Android/i.test(navigator.userAgent) ? intentUrl : 'gps851://open?' + q;
   document.getElementById('btnPlay').href = playUrl;
   setTimeout(function () { location.href = document.getElementById('btnOpen').href; }, 300);
+  }
 };
 </script>
 </head>

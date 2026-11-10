@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>851 GPS Faker - 匯入座標組</title>
+<!-- 2026/11/11：LINE 連結預覽卡片顯示的文字（沒有這兩行時，LINE 會抓到網頁裡隱藏的錯誤提示） -->
+<meta property="og:title" content="851 GPS Faker - 朋友分享的座標組">
+<meta property="og:description" content="點開用 851 GPS Faker 匯入萬花筒「我的地圖收藏」">
+<meta name="description" content="點開用 851 GPS Faker 匯入萬花筒「我的地圖收藏」">
 <style>
   body { background:#0E1525; color:#fff; font-family:sans-serif; text-align:center; padding:32px 20px; margin:0; }
   h1 { color:#60A5FA; font-size:20px; margin:0; }
@@ -49,8 +53,21 @@
   var $ = function (id) { return document.getElementById(id); };
   var hash = location.hash.replace(/^#/, '');
   var m = hash.match(/(?:^|&)d=([A-Za-z0-9_\-=%]+)/);
+  // 2026/11/11（v68）：地點很多的座標組，資料存在 Firebase，連結只帶代號 #s=<代號>，先讀回來
+  var sm = hash.match(/(?:^|&)s=([A-Za-z0-9]{6,40})/);
+  if (!m && sm) {
+    $('name').textContent = '讀取中⋯';
+    fetch('https://firestore.googleapis.com/v1/projects/gps851-feast/databases/(default)/documents/shares/' + sm[1] +
+          '?key=AIzaSyBZmPN9rjQbFmJW8bz2S5KdVMMuqikn-jg')
+      .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function (j) { start(j.fields.d.stringValue); })
+      .catch(function () { $('name').textContent = '座標組'; $('bad').classList.remove('hide'); });
+    return;
+  }
   if (!m) { $('bad').classList.remove('hide'); return; }
-  var data = decodeURIComponent(m[1]);
+  start(decodeURIComponent(m[1]));
+
+  function start(data) {
   var noApp = /(?:\?|&)noapp=1/.test(location.search);
   var isAndroid = /Android/i.test(navigator.userAgent);
 
@@ -97,6 +114,7 @@
 
   // 一打開先自動試著開 APP（有些瀏覽器會擋，擋住就讓使用者自己按藍色按鈕）
   if (!noApp) setTimeout(function () { location.href = intentUrl; }, 400);
+  }
 })();
 </script>
 </body>
