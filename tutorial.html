@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>851 GPS Faker 操作教學</title>
+<style>
+  * { box-sizing:border-box; }
+  body { background:#0E1525; color:#fff; font-family:sans-serif; margin:0; padding:20px 16px 40px; }
+  header { text-align:center; margin-bottom:18px; }
+  h1 { color:#60A5FA; font-size:22px; margin:0; }
+  .sub { color:#9AA3B5; font-size:14px; margin-top:6px; line-height:1.6; }
+  h2 { font-size:17px; color:#FFD54F; margin:26px 0 10px; }
+  .card { display:flex; align-items:center; gap:12px; width:100%; background:#1A2338; border:0; border-radius:14px;
+          padding:14px; margin:0 0 10px; color:#fff; text-align:left; font-size:16px; cursor:pointer; }
+  .card:active { background:#24304A; }
+  .no { flex:none; width:42px; height:42px; border-radius:50%; background:#1565C0; display:flex; align-items:center;
+        justify-content:center; font-weight:bold; font-size:14px; }
+  .t { flex:1; line-height:1.4; }
+  .soon .no { background:#3A4458; }
+  .soon .t::after { content:"影片準備中"; display:block; color:#7C8599; font-size:12px; }
+  .play { flex:none; color:#60A5FA; font-size:22px; }
+  .soon .play { color:#3A4458; }
+  #player { position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; flex-direction:column;
+            align-items:center; justify-content:center; padding:16px; z-index:9; }
+  #player.on { display:flex; }
+  #frameBox { width:100%; max-width:420px; aspect-ratio:9/16; max-height:80vh; }
+  #frameBox iframe { width:100%; height:100%; border:0; border-radius:12px; }
+  #ptitle { margin:12px 0 0; font-size:15px; text-align:center; }
+  #close { margin-top:14px; background:#1565C0; color:#fff; border:0; border-radius:24px; padding:12px 36px; font-size:16px; }
+  .foot { text-align:center; color:#7C8599; font-size:12px; margin-top:30px; line-height:1.7; }
+  .foot a { color:#60A5FA; }
+</style>
+</head>
+<body>
+<header>
+  <h1>851 GPS Faker 操作教學</h1>
+  <div class="sub">點一下想學的功能，就會播放教學影片（每支約 1 分鐘）</div>
+</header>
+<main id="list"></main>
+<div class="foot">
+  還有問題？到 APP「設定」→「回報當機／問題」告訴我們。<br>
+  <a href="https://play.google.com/store/apps/details?id=com.gps851.faker">到 Google Play 下載 851 GPS Faker</a>
+</div>
+
+<div id="player">
+  <div id="frameBox"></div>
+  <div id="ptitle"></div>
+  <button id="close" type="button">關閉影片</button>
+</div>
+
+<script>
+// 影片清單：要換影片或補上新影片，只要改這裡的 YouTube 影片 ID（id 空白＝影片準備中）
+var GROUPS = [
+  { name: '一、開始使用', items: [
+    ['1-1', '手機環境設定', 'rpv8mTntRq0'] ]},
+  { name: '二、定位模擬', items: [
+    ['2-1', '飛到東京、富士山', 'nSCvjuD0ZRQ'],
+    ['2-2', 'LINE 分享目前位置給好友', 'kaAXwFSQOfM'],
+    ['2-3', '儲存座標到我的最愛、新增分類', 'oV_VkVuKqq4'],
+    ['2-4', '搖桿移動與方向對齊', '4U3Ou3U57DY'] ]},
+  { name: '三、路線模擬', items: [
+    ['3-1', '隨機路線模擬', '9B6ogUuJTok'],
+    ['3-2', '新增多個路徑點', 'VZpeionDxPM'],
+    ['3-3', '手動新增路線點', 'EJKpwa02Mx8'],
+    ['3-4', 'LINE 分享路線給好友', '7cPW2y7T3AA'],
+    ['3-5', '儲存路線到我的最愛', 'h6BWt58x160'] ]},
+  { name: '四、我的最愛', items: [
+    ['4-1', '座標套用', ''],
+    ['4-2', '路線套用', ''],
+    ['4-3', '座標與路線匯出匯入備份', ''],
+    ['4-4', '我的最愛匯出到萬花筒', ''] ]},
+  { name: '五、萬花筒', items: [
+    ['5-1', '地圖收藏六組空間', ''],
+    ['5-2', '選座標進行模擬', ''],
+    ['5-3', 'LINE 分享地圖座標書本', ''],
+    ['5-4', '座標轉換工具：Excel 轉萬花筒', ''],
+    ['5-5', '揪團辦桌使用說明', ''] ]}
+];
+
+var list = document.getElementById('list');
+var player = document.getElementById('player');
+var box = document.getElementById('frameBox');
+GROUPS.forEach(function (g) {
+  var h = document.createElement('h2'); h.textContent = g.name; list.appendChild(h);
+  g.items.forEach(function (it) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'card' + (it[2] ? '' : ' soon');
+    b.innerHTML = '<span class="no"></span><span class="t"></span><span class="play">▶</span>';
+    b.querySelector('.no').textContent = it[0];
+    b.querySelector('.t').textContent = it[1];
+    b.onclick = function () { if (it[2]) open(it); };
+    list.appendChild(b);
+  });
+});
+function open(it) {
+  box.innerHTML = '<iframe allow="autoplay; encrypted-media; fullscreen" allowfullscreen src="https://www.youtube.com/embed/' +
+    it[2] + '?autoplay=1&rel=0&playsinline=1"></iframe>';
+  document.getElementById('ptitle').textContent = it[0] + ' ' + it[1];
+  player.classList.add('on');
+  history.pushState({ v: 1 }, '');
+}
+function close() { box.innerHTML = ''; player.classList.remove('on'); }
+document.getElementById('close').onclick = function () { if (history.state && history.state.v) history.back(); else close(); };
+// 手機按「返回」時先關影片，不要直接離開網頁
+window.addEventListener('popstate', close);
+</script>
+</body>
+</html>
