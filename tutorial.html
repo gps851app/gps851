@@ -104,6 +104,12 @@ function close() { box.innerHTML = ''; player.classList.remove('on'); }
 document.getElementById('close').onclick = function () { if (history.state && history.state.v) history.back(); else close(); };
 // 手機按「返回」時先關影片，不要直接離開網頁
 window.addEventListener('popstate', close);
+// 網址最後加 #v=1-1 這種寫法，打開網頁就直接播那一支（APP 第一次打開的設定引導會用到）
+(function () {
+  var m = location.hash.match(/^#v=([\d-]+)$/);
+  if (!m) return;
+  GROUPS.forEach(function (g) { g.items.forEach(function (it) { if (it[0] === m[1] && it[2]) open(it); }); });
+})();
 </script>
 </body>
 </html>
